@@ -32,8 +32,6 @@ Keep API keys and credentials private. Never upload your `.env` file to GitHub.
 
 To make content creation easier, faster, and more accessible by bringing essential creator tools together in one platform.
 
----
-
 **CreatorPilot – Your Creative Journey, On Autopilot!**
 # CreatorPilot
 >>>>>>> cd255c137a7f7c4b7128f217647a4efc1be555dd
