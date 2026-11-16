@@ -1,0 +1,1319 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: deny all reads and writes by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll([
+          'uid',
+          'fullName',
+          'email',
+          'countryCode',
+          'phoneNumber',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'fullName',
+          'email',
+          'countryCode',
+          'phoneNumber',
+          'brandHandle',
+          'niche',
+          'brandVoice',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.uid is string
+        && data.uid.size() >= 1
+        && data.uid.size() <= 128
+        && data.uid == request.auth.uid
+        && data.uid == userId
+        && data.fullName is string
+        && data.fullName.size() >= 2
+        && data.fullName.size() <= 100
+        && data.email is string
+        && data.email.size() >= 5
+        && data.email.size() <= 160
+        && data.countryCode is string
+        && data.countryCode.size() >= 2
+        && data.countryCode.size() <= 8
+        && data.countryCode.matches('^\\+[0-9]{1,5}$')
+        && data.phoneNumber is string
+        && data.phoneNumber.size() >= 6
+        && data.phoneNumber.size() <= 24
+        && (!('brandHandle' in data) || (data.brandHandle is string && data.brandHandle.size() <= 60))
+        && (!('niche' in data) || (data.niche is string && data.niche.size() <= 120))
+        && (!('brandVoice' in data) || (data.brandVoice is string && data.brandVoice.size() <= 400))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPlatform(val) {
+      return val is string && val in ['Instagram', 'YouTube', 'Facebook', 'LinkedIn'];
+    }
+
+    function isValidLanguage(val) {
+      return val is string && val in [
+        'English',
+        'Hindi',
+        'Bengali',
+        'Spanish',
+        'French',
+        'German',
+        'Portuguese',
+        'Japanese'
+      ];
+    }
+
+    function isValidTone(val) {
+      return val is string && val in [
+        'Professional',
+        'Funny',
+        'Educational',
+        'Inspirational',
+        'Casual'
+      ];
+    }
+
+    function isValidDuration(val) {
+      return val is string && val in ['15 sec', '30 sec', '60 sec'];
+    }
+
+    function isValidGenerationConfig(cfg) {
+      return cfg is map
+        && cfg.keys().hasAll([
+          'sourceText',
+          'platform',
+          'language',
+          'tone',
+          'duration'
+        ])
+        && cfg.keys().hasOnly([
+          'sourceText',
+          'platform',
+          'language',
+          'tone',
+          'duration',
+          'niche',
+          'brandVoice',
+          'mediaName'
+        ])
+        && cfg.sourceText is string
+        && cfg.sourceText.size() <= 45000
+        && isValidPlatform(cfg.platform)
+        && isValidLanguage(cfg.language)
+        && isValidTone(cfg.tone)
+        && isValidDuration(cfg.duration)
+        && (!('niche' in cfg) || (cfg.niche is string && cfg.niche.size() <= 150))
+        && (!('brandVoice' in cfg) || (cfg.brandVoice is string && cfg.brandVoice.size() <= 400))
+        && (!('mediaName' in cfg) || (cfg.mediaName is string && cfg.mediaName.size() <= 200));
+    }
+
+    function isValidAnalysis(analysis) {
+      return analysis is map
+        && analysis.keys().hasAll(['summary', 'coreTopic', 'targetAudience', 'keyTakeaways'])
+        && analysis.keys().hasOnly(['summary', 'coreTopic', 'targetAudience', 'keyTakeaways', 'detectedLanguage'])
+        && analysis.summary is string && analysis.summary.size() >= 1 && analysis.summary.size() <= 4000
+        && analysis.coreTopic is string && analysis.coreTopic.size() >= 1 && analysis.coreTopic.size() <= 300
+        && analysis.targetAudience is string && analysis.targetAudience.size() >= 1 && analysis.targetAudience.size() <= 400
+        && analysis.keyTakeaways is list && analysis.keyTakeaways.size() >= 1 && analysis.keyTakeaways.size() <= 10
+        && analysis.keyTakeaways[0] is string && analysis.keyTakeaways[0].size() <= 600
+        && (!('detectedLanguage' in analysis) || (analysis.detectedLanguage is string && analysis.detectedLanguage.size() <= 60));
+    }
+
+    function isValidQualityScore(qs) {
+      return qs is map
+        && qs.keys().hasAll([
+          'overallScore',
+          'gradeLabel',
+          'summary',
+          'dimensions',
+          'strengths',
+          'improvements',
+          'readability',
+          'evaluatedAt',
+          'model'
+        ])
+        && qs.keys().hasOnly([
+          'overallScore',
+          'gradeLabel',
+          'summary',
+          'dimensions',
+          'strengths',
+          'improvements',
+          'readability',
+          'evaluatedAt',
+          'model'
+        ])
+        && qs.overallScore is number && qs.overallScore >= 0 && qs.overallScore <= 100
+        && qs.gradeLabel is string && qs.gradeLabel in ['Publication Ready', 'Strong Draft', 'Needs Refinement']
+        && qs.summary is string && qs.summary.size() >= 1 && qs.summary.size() <= 1000
+        && qs.dimensions is map
+        && qs.strengths is list && qs.strengths.size() <= 6
+        && (qs.strengths.size() == 0 || (qs.strengths[0] is string && qs.strengths[0].size() <= 400))
+        && qs.improvements is list && qs.improvements.size() <= 6
+        && (qs.improvements.size() == 0 || qs.improvements[0] is map)
+        && qs.readability is map
+        && qs.evaluatedAt is string && qs.evaluatedAt.size() <= 60
+        && qs.model is string && qs.model.size() <= 80;
+    }
+
+    function isValidGeneratedResult(res) {
+      return res is map
+        && res.keys().hasAll([
+          'instagramReel',
+          'youtubeShorts',
+          'instagramCaption',
+          'hashtags',
+          'platformPosts',
+          'engine'
+        ])
+        && res.keys().hasOnly([
+          'analysis',
+          'hooks',
+          'instagramReel',
+          'youtubeShorts',
+          'instagramCaption',
+          'hashtags',
+          'platformPosts',
+          'qualityScore',
+          'engine',
+          'model',
+          'generatedAt'
+        ])
+        && res.engine is string && res.engine in ['gemini', 'demo', 'template']
+        && (!('model' in res) || (res.model is string && res.model.size() <= 80))
+        && (!('generatedAt' in res) || (res.generatedAt is string && res.generatedAt.size() <= 60))
+        && (!('analysis' in res) || isValidAnalysis(res.analysis))
+        && (!('qualityScore' in res) || isValidQualityScore(res.qualityScore))
+        && (!('hooks' in res) || (
+          res.hooks is list
+          && res.hooks.size() >= 1
+          && res.hooks.size() <= 10
+          && res.hooks[0] is string
+          && res.hooks[0].size() <= 600
+        ))
+        && res.instagramReel is map
+        && res.instagramReel.keys().hasAll(['title', 'hook', 'script', 'cta'])
+        && res.instagramReel.keys().hasOnly(['title', 'hook', 'script', 'cta'])
+        && res.instagramReel.title is string && res.instagramReel.title.size() <= 300
+        && res.instagramReel.hook is string && res.instagramReel.hook.size() <= 1000
+        && res.instagramReel.script is string && res.instagramReel.script.size() <= 12000
+        && res.instagramReel.cta is string && res.instagramReel.cta.size() <= 1000
+        && res.youtubeShorts is map
+        && res.youtubeShorts.keys().hasAll(['title', 'script', 'description', 'cta'])
+        && res.youtubeShorts.keys().hasOnly(['title', 'script', 'description', 'cta'])
+        && res.youtubeShorts.title is string && res.youtubeShorts.title.size() <= 300
+        && res.youtubeShorts.script is string && res.youtubeShorts.script.size() <= 12000
+        && res.youtubeShorts.description is string && res.youtubeShorts.description.size() <= 6000
+        && res.youtubeShorts.cta is string && res.youtubeShorts.cta.size() <= 1000
+        && res.instagramCaption is map
+        && res.instagramCaption.keys().hasAll(['caption'])
+        && res.instagramCaption.keys().hasOnly(['caption'])
+        && res.instagramCaption.caption is string && res.instagramCaption.caption.size() <= 6000
+        && res.hashtags is map
+        && res.hashtags.keys().hasAll(['relevant', 'trending'])
+        && res.hashtags.keys().hasOnly(['relevant', 'trending'])
+        && res.hashtags.relevant is list && res.hashtags.relevant.size() <= 25
+        && (res.hashtags.relevant.size() == 0 || (res.hashtags.relevant[0] is string && res.hashtags.relevant[0].size() <= 100))
+        && res.hashtags.trending is list && res.hashtags.trending.size() <= 25
+        && (res.hashtags.trending.size() == 0 || (res.hashtags.trending[0] is string && res.hashtags.trending[0].size() <= 100))
+        && res.platformPosts is map
+        && res.platformPosts.keys().hasAll(['instagram', 'youtubeCommunity', 'linkedin', 'facebook'])
+        && res.platformPosts.keys().hasOnly(['instagram', 'youtubeCommunity', 'linkedin', 'facebook'])
+        && res.platformPosts.instagram is string && res.platformPosts.instagram.size() <= 6000
+        && res.platformPosts.youtubeCommunity is string && res.platformPosts.youtubeCommunity.size() <= 6000
+        && res.platformPosts.linkedin is string && res.platformPosts.linkedin.size() <= 6000
+        && res.platformPosts.facebook is string && res.platformPosts.facebook.size() <= 6000;
+    }
+
+    function isValidProject(data, userId, projectId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'title',
+          'config',
+          'result',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'title',
+          'config',
+          'result',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == projectId
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 140
+        && isValidGenerationConfig(data.config)
+        && isValidGeneratedResult(data.result)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidGeneration(data, userId, generationId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'sourcePreview',
+          'config',
+          'result',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'projectId',
+          'sourcePreview',
+          'config',
+          'result',
+          'createdAt'
+        ])
+        && isValidId(data.id)
+        && data.id == generationId
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && (!('projectId' in data) || (data.projectId is string && data.projectId.size() <= 128))
+        && data.sourcePreview is string
+        && data.sourcePreview.size() >= 1
+        && data.sourcePreview.size() <= 300
+        && isValidGenerationConfig(data.config)
+        && isValidGeneratedResult(data.result)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidWorkspaceSettings(data, userId) {
+      return data.keys().hasAll([
+          'userId',
+          'creatorName',
+          'defaultPlatform',
+          'defaultLanguage',
+          'defaultTone',
+          'defaultDuration',
+          'exportFormat',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId',
+          'creatorName',
+          'brandHandle',
+          'niche',
+          'brandVoice',
+          'defaultPlatform',
+          'defaultLanguage',
+          'defaultTone',
+          'defaultDuration',
+          'exportFormat',
+          'updatedAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && data.creatorName is string && data.creatorName.size() >= 1 && data.creatorName.size() <= 100
+        && (!('brandHandle' in data) || (data.brandHandle is string && data.brandHandle.size() <= 60))
+        && (!('niche' in data) || (data.niche is string && data.niche.size() <= 150))
+        && (!('brandVoice' in data) || (data.brandVoice is string && data.brandVoice.size() <= 400))
+        && isValidPlatform(data.defaultPlatform)
+        && isValidLanguage(data.defaultLanguage)
+        && isValidTone(data.defaultTone)
+        && isValidDuration(data.defaultDuration)
+        && data.exportFormat is string && data.exportFormat in ['markdown', 'txt', 'json']
+        && data.updatedAt is timestamp;
+    }
+
+    // Strict owner-only PII isolation for user profiles (no collection list allowed)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'fullName',
+          'countryCode',
+          'phoneNumber',
+          'brandHandle',
+          'niche',
+          'brandVoice',
+          'updatedAt'
+        ]);
+
+      allow delete: if isValidId(userId) && isOwner(userId);
+
+      // Authenticated user's saved projects
+      match /projects/{projectId} {
+        allow get: if isValidId(userId) && isValidId(projectId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isValidId(userId)
+          && isValidId(projectId)
+          && isOwner(userId)
+          && isValidProject(incoming(), userId, projectId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(userId)
+          && isValidId(projectId)
+          && isOwner(userId)
+          && isValidProject(incoming(), userId, projectId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title',
+            'config',
+            'result',
+            'updatedAt'
+          ]);
+
+        allow delete: if isValidId(userId) && isValidId(projectId) && isOwner(userId);
+      }
+
+      // Authenticated user's AI content generation history
+      match /generations/{generationId} {
+        allow get: if isValidId(userId) && isValidId(generationId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isValidId(userId)
+          && isValidId(generationId)
+          && isOwner(userId)
+          && isValidGeneration(incoming(), userId, generationId)
+          && incoming().createdAt == request.time;
+
+        allow update: if false;
+
+        allow delete: if isValidId(userId) && isValidId(generationId) && isOwner(userId);
+      }
+
+      // Authenticated user's workspace settings
+      match /settings/{settingId} {
+        allow get: if isValidId(userId) && isValidId(settingId) && isOwner(userId) && settingId == 'workspace';
+        allow list: if false;
+
+        allow create: if isValidId(userId)
+          && isValidId(settingId)
+          && settingId == 'workspace'
+          && isOwner(userId)
+          && isValidWorkspaceSettings(incoming(), userId)
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(userId)
+          && isValidId(settingId)
+          && settingId == 'workspace'
+          && isOwner(userId)
+          && isValidWorkspaceSettings(incoming(), userId)
+          && incoming().userId == existing().userId
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'creatorName',
+            'brandHandle',
+            'niche',
+            'brandVoice',
+            'defaultPlatform',
+            'defaultLanguage',
+            'defaultTone',
+            'defaultDuration',
+            'exportFormat',
+            'updatedAt'
+          ]);
+
+        allow delete: if isValidId(userId) && isValidId(settingId) && isOwner(userId) && settingId == 'workspace';
+      }
+
+      // Authenticated user's Autonomous AI Assistant conversations
+      match /assistantConversations/{conversationId} {
+        allow get: if isValidId(userId) && isValidId(conversationId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isValidId(userId)
+          && isValidId(conversationId)
+          && isOwner(userId)
+          && isValidAssistantConversation(incoming(), userId, conversationId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(userId)
+          && isValidId(conversationId)
+          && isOwner(userId)
+          && isValidAssistantConversation(incoming(), userId, conversationId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title',
+            'projectId',
+            'projectTitle',
+            'mediaName',
+            'updatedAt'
+          ]);
+
+        allow delete: if isValidId(userId) && isValidId(conversationId) && isOwner(userId);
+
+        match /messages/{messageId} {
+          allow get: if isValidId(userId) && isValidId(conversationId) && isValidId(messageId) && isOwner(userId);
+          allow list: if isValidId(userId) && isValidId(conversationId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+
+          allow create: if isValidId(userId)
+            && isValidId(conversationId)
+            && isValidId(messageId)
+            && isOwner(userId)
+            && isValidAssistantMessage(incoming(), userId, conversationId, messageId)
+            && incoming().createdAt == request.time
+            && exists(/databases/$(database)/documents/users/$(userId)/assistantConversations/$(conversationId));
+
+          allow update: if false;
+
+          allow delete: if isValidId(userId) && isValidId(conversationId) && isValidId(messageId) && isOwner(userId);
+        }
+      }
+
+      // Authenticated user's Autonomous AI Assistant task history & approvals
+      match /assistantTasks/{taskId} {
+        allow get: if isValidId(userId) && isValidId(taskId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isValidId(userId)
+          && isValidId(taskId)
+          && isOwner(userId)
+          && isValidAssistantTask(incoming(), userId, taskId)
+          && incoming().approvalStatus == 'pending_approval'
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(userId)
+          && isValidId(taskId)
+          && isOwner(userId)
+          && isValidAssistantTask(incoming(), userId, taskId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().conversationId == existing().conversationId
+          && incoming().jobId == existing().jobId
+          && incoming().instruction == existing().instruction
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (incoming().approvalStatus != 'published' || existing().approvalStatus == 'approved')
+          && (incoming().approvalStatus != 'approved' || incoming().status == 'completed')
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'status',
+            'confirmedByBackend',
+            'approvalStatus',
+            'approvedAt',
+            'publishedAt',
+            'error',
+            'steps',
+            'outputs',
+            'updatedAt'
+          ]);
+
+        allow delete: if isValidId(userId) && isValidId(taskId) && isOwner(userId);
+      }
+
+      // Non-secret social connection metadata (tokens stay strictly in encrypted backend vault)
+      match /socialConnections/{platform} {
+        allow get: if isValidId(userId) && isValidSocialPlatform(platform) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isValidId(userId)
+          && isValidSocialPlatform(platform)
+          && isOwner(userId)
+          && isValidSocialConnection(incoming(), userId, platform)
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(userId)
+          && isValidSocialPlatform(platform)
+          && isOwner(userId)
+          && isValidSocialConnection(incoming(), userId, platform)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().platform == existing().platform
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'status',
+            'accountName',
+            'accountHandle',
+            'externalAccountId',
+            'scopes',
+            'tokenExpiresAt',
+            'lastCheckedAt',
+            'lastError',
+            'connectedAt',
+            'updatedAt'
+          ]);
+
+        allow delete: if isValidId(userId) && isValidSocialPlatform(platform) && isOwner(userId);
+      }
+
+      // Social media publishing queue, scheduling, approval gate, and analytics snapshots
+      match /socialPosts/{postId} {
+        allow get: if isValidId(userId) && isValidId(postId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isValidId(userId)
+          && isValidId(postId)
+          && isOwner(userId)
+          && isValidSocialPost(incoming(), userId, postId)
+          && incoming().approvalStatus == 'pending_approval'
+          && incoming().status == 'draft'
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(userId)
+          && isValidId(postId)
+          && isOwner(userId)
+          && isValidSocialPost(incoming(), userId, postId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().platform == existing().platform
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (incoming().status != 'scheduled' || incoming().approvalStatus == 'approved')
+          && (incoming().status != 'publishing' || incoming().approvalStatus == 'approved')
+          && (incoming().status != 'published' || existing().approvalStatus == 'approved')
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title',
+            'caption',
+            'hashtags',
+            'mediaUrl',
+            'mediaType',
+            'youtubePrivacy',
+            'projectId',
+            'approvalStatus',
+            'approvedAt',
+            'status',
+            'scheduledFor',
+            'publishedAt',
+            'externalPostId',
+            'externalPostUrl',
+            'error',
+            'errorCode',
+            'analytics',
+            'updatedAt'
+          ]);
+
+        allow delete: if isValidId(userId) && isValidId(postId) && isOwner(userId);
+      }
+
+      // Authenticated user's AI Brand Kit configuration
+      match /brandKit/{brandKitId} {
+        allow get: if isValidId(userId) && isValidId(brandKitId) && isOwner(userId) && brandKitId == 'default';
+        allow list: if false;
+
+        allow create: if isValidId(userId)
+          && isValidId(brandKitId)
+          && brandKitId == 'default'
+          && isOwner(userId)
+          && isValidBrandKit(incoming(), userId)
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(userId)
+          && isValidId(brandKitId)
+          && brandKitId == 'default'
+          && isOwner(userId)
+          && isValidBrandKit(incoming(), userId)
+          && incoming().userId == existing().userId
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'brandName',
+            'brandHandle',
+            'tagline',
+            'logoUrl',
+            'logoStoragePath',
+            'colors',
+            'typography',
+            'brandVoice',
+            'preferredCtas',
+            'captionStyle',
+            'templates',
+            'updatedAt'
+          ]);
+
+        allow delete: if isValidId(userId) && isValidId(brandKitId) && isOwner(userId) && brandKitId == 'default';
+      }
+
+      // Authenticated user's FFmpeg video processing jobs
+      match /videoJobs/{jobId} {
+        allow get: if isValidId(userId) && isValidId(jobId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isValidId(userId)
+          && isValidId(jobId)
+          && isOwner(userId)
+          && isValidVideoJob(incoming(), userId, jobId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(userId)
+          && isValidId(jobId)
+          && isOwner(userId)
+          && isValidVideoJob(incoming(), userId, jobId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'status',
+            'progress',
+            'stageMessage',
+            'outputFileName',
+            'downloadUrl',
+            'storageUrl',
+            'storagePath',
+            'outputBytes',
+            'error',
+            'updatedAt'
+          ]);
+
+        allow delete: if isValidId(userId) && isValidId(jobId) && isOwner(userId);
+      }
+
+      // Authenticated user's saved AI Thumbnail Studio assets
+      match /thumbnails/{thumbnailId} {
+        allow get: if isValidId(userId) && isValidId(thumbnailId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isValidId(userId)
+          && isValidId(thumbnailId)
+          && isOwner(userId)
+          && isValidThumbnailAsset(incoming(), userId, thumbnailId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(userId)
+          && isValidId(thumbnailId)
+          && isOwner(userId)
+          && isValidThumbnailAsset(incoming(), userId, thumbnailId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title',
+            'headline',
+            'kicker',
+            'statCallout',
+            'aspectRatio',
+            'stylePreset',
+            'layout',
+            'palette',
+            'storageUrl',
+            'storagePath',
+            'projectId',
+            'ctrRationale',
+            'updatedAt'
+          ]);
+
+        allow delete: if isValidId(userId) && isValidId(thumbnailId) && isOwner(userId);
+      }
+
+      // Authenticated user's Automatic AI Script-to-Video generation jobs
+      match /aiVideoJobs/{jobId} {
+        allow get: if isValidId(userId) && isValidId(jobId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isValidId(userId)
+          && isValidId(jobId)
+          && isOwner(userId)
+          && isValidAiVideoJob(incoming(), userId, jobId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(userId)
+          && isValidId(jobId)
+          && isOwner(userId)
+          && isValidAiVideoJob(incoming(), userId, jobId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'status',
+            'currentStage',
+            'stageMessage',
+            'progress',
+            'completedScenes',
+            'sceneStates',
+            'subtitlesCount',
+            'subtitleStyle',
+            'musicPreset',
+            'musicVolume',
+            'narrationVolume',
+            'enableSubtitles',
+            'outputFileName',
+            'outputWidth',
+            'outputHeight',
+            'actualDurationSec',
+            'outputBytes',
+            'downloadUrl',
+            'srtDownloadUrl',
+            'storageUrl',
+            'storagePath',
+            'error',
+            'updatedAt'
+          ]);
+
+        allow delete: if isValidId(userId) && isValidId(jobId) && isOwner(userId);
+      }
+    }
+
+    function isValidAssistantConversation(data, userId, conversationId) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'title',
+          'projectId',
+          'projectTitle',
+          'mediaName',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == conversationId
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 140
+        && (!('projectId' in data) || (data.projectId is string && data.projectId.size() <= 128))
+        && (!('projectTitle' in data) || (data.projectTitle is string && data.projectTitle.size() <= 140))
+        && (!('mediaName' in data) || (data.mediaName is string && data.mediaName.size() <= 200))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAssistantMessage(data, userId, conversationId, messageId) {
+      return data.keys().hasAll(['id', 'userId', 'conversationId', 'role', 'content', 'createdAt'])
+        && data.keys().hasOnly(['id', 'userId', 'conversationId', 'role', 'content', 'taskId', 'createdAt'])
+        && isValidId(data.id)
+        && data.id == messageId
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && isValidId(data.conversationId)
+        && data.conversationId == conversationId
+        && data.role is string && data.role in ['user', 'assistant', 'system']
+        && data.content is string && data.content.size() >= 1 && data.content.size() <= 12000
+        && (!('taskId' in data) || (data.taskId is string && data.taskId.size() <= 128))
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAssistantTask(data, userId, taskId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'conversationId',
+          'jobId',
+          'instruction',
+          'language',
+          'status',
+          'confirmedByBackend',
+          'approvalStatus',
+          'steps',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'conversationId',
+          'jobId',
+          'instruction',
+          'projectId',
+          'projectTitle',
+          'mediaName',
+          'language',
+          'status',
+          'confirmedByBackend',
+          'approvalStatus',
+          'approvedAt',
+          'publishedAt',
+          'error',
+          'steps',
+          'outputs',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == taskId
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && isValidId(data.conversationId)
+        && data.jobId is string && data.jobId.size() >= 1 && data.jobId.size() <= 128
+        && data.instruction is string && data.instruction.size() >= 1 && data.instruction.size() <= 4000
+        && (!('projectId' in data) || (data.projectId is string && data.projectId.size() <= 128))
+        && (!('projectTitle' in data) || (data.projectTitle is string && data.projectTitle.size() <= 140))
+        && (!('mediaName' in data) || (data.mediaName is string && data.mediaName.size() <= 200))
+        && isValidLanguage(data.language)
+        && data.status is string && data.status in ['queued', 'running', 'completed', 'failed']
+        && data.confirmedByBackend is bool
+        && (!data.confirmedByBackend || data.status == 'completed')
+        && data.approvalStatus is string && data.approvalStatus in ['pending_approval', 'approved', 'published']
+        && (!('approvedAt' in data) || (data.approvedAt is string && data.approvedAt.size() <= 60))
+        && (!('publishedAt' in data) || (data.publishedAt is string && data.publishedAt.size() <= 60))
+        && (!('error' in data) || (data.error is string && data.error.size() <= 1000))
+        && data.steps is list && data.steps.size() >= 1 && data.steps.size() <= 10
+        && data.steps[0] is map
+        && (!('outputs' in data) || data.outputs is map)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSocialPlatform(val) {
+      return val is string && val in ['instagram', 'youtube', 'linkedin', 'facebook'];
+    }
+
+    function isValidSocialConnection(data, userId, platform) {
+      return data.keys().hasAll(['id', 'userId', 'platform', 'status', 'updatedAt'])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'platform',
+          'status',
+          'accountName',
+          'accountHandle',
+          'externalAccountId',
+          'scopes',
+          'tokenExpiresAt',
+          'lastCheckedAt',
+          'lastError',
+          'connectedAt',
+          'updatedAt'
+        ])
+        && isValidSocialPlatform(data.id)
+        && data.id == platform
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && isValidSocialPlatform(data.platform)
+        && data.platform == platform
+        && data.status is string
+        && data.status in ['connected', 'expired', 'needs_reauth', 'disconnected', 'not_configured']
+        && (!('accountName' in data) || (data.accountName is string && data.accountName.size() <= 140))
+        && (!('accountHandle' in data) || (data.accountHandle is string && data.accountHandle.size() <= 120))
+        && (!('externalAccountId' in data) || (data.externalAccountId is string && data.externalAccountId.size() <= 140))
+        && (!('scopes' in data) || (
+          data.scopes is list
+          && data.scopes.size() <= 20
+          && (data.scopes.size() == 0 || (data.scopes[0] is string && data.scopes[0].size() <= 160))
+        ))
+        && (!('tokenExpiresAt' in data) || (data.tokenExpiresAt is string && data.tokenExpiresAt.size() <= 60))
+        && (!('lastCheckedAt' in data) || (data.lastCheckedAt is string && data.lastCheckedAt.size() <= 60))
+        && (!('lastError' in data) || (data.lastError is string && data.lastError.size() <= 600))
+        && (!('connectedAt' in data) || (data.connectedAt is string && data.connectedAt.size() <= 60))
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSocialPost(data, userId, postId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'platform',
+          'caption',
+          'mediaType',
+          'approvalStatus',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'platform',
+          'title',
+          'caption',
+          'hashtags',
+          'mediaUrl',
+          'mediaType',
+          'youtubePrivacy',
+          'projectId',
+          'approvalStatus',
+          'approvedAt',
+          'status',
+          'scheduledFor',
+          'publishedAt',
+          'externalPostId',
+          'externalPostUrl',
+          'error',
+          'errorCode',
+          'analytics',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == postId
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && isValidSocialPlatform(data.platform)
+        && (!('title' in data) || (data.title is string && data.title.size() <= 200))
+        && data.caption is string && data.caption.size() >= 1 && data.caption.size() <= 6000
+        && (!('hashtags' in data) || (
+          data.hashtags is list
+          && data.hashtags.size() <= 30
+          && (data.hashtags.size() == 0 || (data.hashtags[0] is string && data.hashtags[0].size() <= 100))
+        ))
+        && (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 1500))
+        && data.mediaType is string && data.mediaType in ['none', 'image', 'video', 'link']
+        && (!('youtubePrivacy' in data) || (data.youtubePrivacy is string && data.youtubePrivacy in ['private', 'unlisted', 'public']))
+        && (!('projectId' in data) || (data.projectId is string && data.projectId.size() <= 128))
+        && data.approvalStatus is string && data.approvalStatus in ['pending_approval', 'approved']
+        && (!('approvedAt' in data) || (data.approvedAt is string && data.approvedAt.size() <= 60))
+        && data.status is string && data.status in ['draft', 'scheduled', 'publishing', 'published', 'failed']
+        && (!('scheduledFor' in data) || (data.scheduledFor is string && data.scheduledFor.size() <= 60))
+        && (!('publishedAt' in data) || (data.publishedAt is string && data.publishedAt.size() <= 60))
+        && (!('externalPostId' in data) || (data.externalPostId is string && data.externalPostId.size() <= 200))
+        && (!('externalPostUrl' in data) || (data.externalPostUrl is string && data.externalPostUrl.size() <= 600))
+        && (!('error' in data) || (data.error is string && data.error.size() <= 1000))
+        && (!('errorCode' in data) || (data.errorCode is string && data.errorCode.size() <= 80))
+        && (!('analytics' in data) || data.analytics is map)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidBrandKit(data, userId) {
+      return data.keys().hasAll([
+          'userId',
+          'brandName',
+          'colors',
+          'typography',
+          'brandVoice',
+          'preferredCtas',
+          'captionStyle',
+          'templates',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId',
+          'brandName',
+          'brandHandle',
+          'tagline',
+          'logoUrl',
+          'logoStoragePath',
+          'colors',
+          'typography',
+          'brandVoice',
+          'preferredCtas',
+          'captionStyle',
+          'templates',
+          'updatedAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && data.brandName is string && data.brandName.size() >= 1 && data.brandName.size() <= 120
+        && (!('brandHandle' in data) || (data.brandHandle is string && data.brandHandle.size() <= 80))
+        && (!('tagline' in data) || (data.tagline is string && data.tagline.size() <= 240))
+        && (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 1500))
+        && (!('logoStoragePath' in data) || (data.logoStoragePath is string && data.logoStoragePath.size() <= 300))
+        && data.colors is map
+        && data.colors.keys().hasAll(['primary', 'secondary', 'accent', 'background', 'text'])
+        && data.colors.keys().hasOnly(['primary', 'secondary', 'accent', 'background', 'text'])
+        && data.typography is map
+        && data.typography.keys().hasAll(['headingFont', 'bodyFont'])
+        && data.typography.keys().hasOnly(['headingFont', 'bodyFont'])
+        && data.brandVoice is string && data.brandVoice.size() <= 600
+        && data.preferredCtas is list && data.preferredCtas.size() <= 12
+        && (data.preferredCtas.size() == 0 || (data.preferredCtas[0] is string && data.preferredCtas[0].size() <= 280))
+        && data.captionStyle is map
+        && data.templates is list && data.templates.size() <= 15
+        && (data.templates.size() == 0 || data.templates[0] is map)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidVideoJob(data, userId, jobId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'sourceFileName',
+          'sourceDurationSec',
+          'sourceWidth',
+          'sourceHeight',
+          'clipTitle',
+          'startSec',
+          'endSec',
+          'aspectRatio',
+          'language',
+          'subtitleStyle',
+          'subtitlesCount',
+          'status',
+          'progress',
+          'stageMessage',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'uploadId',
+          'sourceFileName',
+          'sourceDurationSec',
+          'sourceWidth',
+          'sourceHeight',
+          'clipTitle',
+          'startSec',
+          'endSec',
+          'aspectRatio',
+          'language',
+          'subtitleStyle',
+          'subtitlesCount',
+          'status',
+          'progress',
+          'stageMessage',
+          'outputFileName',
+          'downloadUrl',
+          'storageUrl',
+          'storagePath',
+          'outputBytes',
+          'error',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == jobId
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && (!('uploadId' in data) || (data.uploadId is string && data.uploadId.size() <= 128))
+        && data.sourceFileName is string && data.sourceFileName.size() >= 1 && data.sourceFileName.size() <= 240
+        && data.sourceDurationSec is number
+        && data.sourceWidth is number
+        && data.sourceHeight is number
+        && data.clipTitle is string && data.clipTitle.size() >= 1 && data.clipTitle.size() <= 160
+        && data.startSec is number && data.endSec is number && data.endSec > data.startSec
+        && data.aspectRatio is string && data.aspectRatio in ['9:16', '1:1', '16:9']
+        && isValidLanguage(data.language)
+        && data.subtitleStyle is map
+        && data.subtitlesCount is number
+        && data.status is string && data.status in ['queued', 'processing', 'completed', 'failed']
+        && data.progress is number
+        && data.stageMessage is string && data.stageMessage.size() <= 400
+        && (!('outputFileName' in data) || (data.outputFileName is string && data.outputFileName.size() <= 240))
+        && (!('downloadUrl' in data) || (data.downloadUrl is string && data.downloadUrl.size() <= 1500))
+        && (!('storageUrl' in data) || (data.storageUrl is string && data.storageUrl.size() <= 1500))
+        && (!('storagePath' in data) || (data.storagePath is string && data.storagePath.size() <= 300))
+        && (!('outputBytes' in data) || data.outputBytes is number)
+        && (!('error' in data) || (data.error is string && data.error.size() <= 1000))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidThumbnailAsset(data, userId, thumbnailId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'title',
+          'headline',
+          'kicker',
+          'aspectRatio',
+          'stylePreset',
+          'layout',
+          'palette',
+          'storageUrl',
+          'storagePath',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'title',
+          'headline',
+          'kicker',
+          'statCallout',
+          'aspectRatio',
+          'stylePreset',
+          'layout',
+          'palette',
+          'storageUrl',
+          'storagePath',
+          'projectId',
+          'ctrRationale',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == thumbnailId
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 160
+        && data.headline is string && data.headline.size() >= 1 && data.headline.size() <= 120
+        && data.kicker is string && data.kicker.size() <= 80
+        && (!('statCallout' in data) || (data.statCallout is string && data.statCallout.size() <= 60))
+        && data.aspectRatio is string && data.aspectRatio in ['16:9', '9:16', '1:1']
+        && data.stylePreset is string && data.stylePreset in ['bold-creator', 'editorial-minimal', 'tech-dark', 'split-comparison', 'stat-spotlight']
+        && data.layout is string && data.layout in ['split-left', 'center-spotlight', 'bottom-editorial', 'stat-grid']
+        && data.palette is map
+        && data.palette.keys().hasAll(['background', 'surface', 'accent', 'text', 'mutedText'])
+        && data.palette.keys().hasOnly(['background', 'surface', 'accent', 'text', 'mutedText'])
+        && data.storageUrl is string && data.storageUrl.size() >= 1 && data.storageUrl.size() <= 1500
+        && data.storagePath is string && data.storagePath.size() >= 1 && data.storagePath.size() <= 300
+        && (!('projectId' in data) || (data.projectId is string && data.projectId.size() <= 128))
+        && (!('ctrRationale' in data) || (data.ctrRationale is string && data.ctrRationale.size() <= 600))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAiVideoJob(data, userId, jobId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'title',
+          'originalScript',
+          'style',
+          'durationSec',
+          'aspectRatio',
+          'language',
+          'voice',
+          'musicPreset',
+          'musicVolume',
+          'enableSubtitles',
+          'subtitleStyle',
+          'status',
+          'currentStage',
+          'stageMessage',
+          'progress',
+          'scenesCount',
+          'completedScenes',
+          'sceneStates',
+          'subtitlesCount',
+          'estimatedCostUsd',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'visualEngine',
+          'freeVisualStyle',
+          'title',
+          'originalScript',
+          'style',
+          'durationSec',
+          'aspectRatio',
+          'language',
+          'voice',
+          'narrationVolume',
+          'musicPreset',
+          'musicVolume',
+          'enableSubtitles',
+          'subtitleStyle',
+          'status',
+          'currentStage',
+          'stageMessage',
+          'progress',
+          'scenesCount',
+          'completedScenes',
+          'sceneStates',
+          'subtitlesCount',
+          'estimatedCostUsd',
+          'outputFileName',
+          'outputWidth',
+          'outputHeight',
+          'actualDurationSec',
+          'outputBytes',
+          'downloadUrl',
+          'srtDownloadUrl',
+          'storageUrl',
+          'storagePath',
+          'error',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == jobId
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.userId == userId
+        && (!('visualEngine' in data) || (data.visualEngine is string && data.visualEngine in ['ai-omni', 'free-motion']))
+        && (!('freeVisualStyle' in data) || (data.freeVisualStyle is string && data.freeVisualStyle in ['topic-pictures', 'animated-motion']))
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 160
+        && data.originalScript is string && data.originalScript.size() >= 1 && data.originalScript.size() <= 16000
+        && data.style is string && data.style in ['cinematic', 'documentary', 'modern-tech', 'minimalist', 'energetic-social', 'storytelling']
+        && data.durationSec is number && data.durationSec in [15, 30, 60, 90]
+        && data.aspectRatio is string && data.aspectRatio in ['9:16', '16:9', '1:1']
+        && isValidLanguage(data.language)
+        && data.voice is string && data.voice in ['none', 'Kore', 'Puck', 'Charon', 'Fenrir', 'Zephyr']
+        && (!('narrationVolume' in data) || (data.narrationVolume is number && data.narrationVolume >= 0 && data.narrationVolume <= 1.5))
+        && data.musicPreset is string && data.musicPreset in ['none', 'ambient-uplift', 'tech-pulse', 'cinematic-score', 'lofi-chill', 'ai-lyria']
+        && data.musicVolume is number && data.musicVolume >= 0 && data.musicVolume <= 1
+        && data.enableSubtitles is bool
+        && data.subtitleStyle is map
+        && data.status is string && data.status in ['queued', 'processing', 'completed', 'failed', 'cancelled']
+        && data.currentStage is string && data.currentStage in ['analyzing_script', 'creating_scene_plan', 'generating_clips', 'generating_voiceover', 'creating_subtitles', 'combining_media', 'exporting_mp4']
+        && data.stageMessage is string && data.stageMessage.size() <= 400
+        && data.progress is number && data.progress >= 0 && data.progress <= 100
+        && data.scenesCount is number && data.scenesCount >= 1 && data.scenesCount <= 12
+        && data.completedScenes is number && data.completedScenes >= 0 && data.completedScenes <= 12
+        && data.sceneStates is list && data.sceneStates.size() <= 12
+        && (data.sceneStates.size() == 0 || data.sceneStates[0] is map)
+        && data.subtitlesCount is number && data.subtitlesCount >= 0 && data.subtitlesCount <= 500
+        && data.estimatedCostUsd is number && data.estimatedCostUsd >= 0 && data.estimatedCostUsd <= 500
+        && (!('outputFileName' in data) || (data.outputFileName is string && data.outputFileName.size() <= 240))
+        && (!('outputWidth' in data) || data.outputWidth is number)
+        && (!('outputHeight' in data) || data.outputHeight is number)
+        && (!('actualDurationSec' in data) || data.actualDurationSec is number)
+        && (!('outputBytes' in data) || data.outputBytes is number)
+        && (!('downloadUrl' in data) || (data.downloadUrl is string && data.downloadUrl.size() <= 1500))
+        && (!('srtDownloadUrl' in data) || (data.srtDownloadUrl is string && data.srtDownloadUrl.size() <= 1500))
+        && (!('storageUrl' in data) || (data.storageUrl is string && data.storageUrl.size() <= 1500))
+        && (!('storagePath' in data) || (data.storagePath is string && data.storagePath.size() <= 300))
+        && (!('error' in data) || (data.error is string && data.error.size() <= 1000))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Connection verification probe path (read-only ping)
+    match /test/connection {
+      allow get: if true;
+    }
+  }
+}

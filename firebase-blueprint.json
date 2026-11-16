@@ -1,0 +1,1338 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Creator account profile linked to Firebase Auth UID (never stores passwords).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Authentication user UID."
+        },
+        "fullName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "description": "Creator full display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 5,
+          "maxLength": 160,
+          "description": "Registered email address."
+        },
+        "countryCode": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 8,
+          "pattern": "^\\+[0-9]{1,5}$",
+          "description": "International dialing prefix such as +1 or +91."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 24,
+          "description": "Formatted phone number with country code."
+        },
+        "brandHandle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 60,
+          "description": "Creator social handle."
+        },
+        "niche": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120,
+          "description": "Creator content niche."
+        },
+        "brandVoice": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 400,
+          "description": "Customizable creator brand voice guidelines."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when account was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when profile was last updated."
+        }
+      },
+      "required": [
+        "uid",
+        "fullName",
+        "email",
+        "countryCode",
+        "phoneNumber",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CreatorProject": {
+      "title": "CreatorProject",
+      "description": "Saved creator project containing input configuration and AI-generated multi-platform content.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Project document ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140,
+          "description": "Project title."
+        },
+        "config": {
+          "type": "object",
+          "description": "Generation configuration including sourceText, platform, language, tone, duration, niche, and brandVoice."
+        },
+        "result": {
+          "type": "object",
+          "description": "Structured multi-platform generated content bundle including analysis, hooks, scripts, captions, hashtags, and posts."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when project was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when project was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "config",
+        "result",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ContentGeneration": {
+      "title": "ContentGeneration",
+      "description": "Individual AI content generation entry stored in user history.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Generation document ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "projectId": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 128,
+          "description": "Optional linked project ID."
+        },
+        "sourcePreview": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "description": "Short preview of the source prompt or media."
+        },
+        "config": {
+          "type": "object",
+          "description": "Generation parameters used for this run."
+        },
+        "result": {
+          "type": "object",
+          "description": "Structured AI-generated content result."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when content was generated."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "sourcePreview",
+        "config",
+        "result",
+        "createdAt"
+      ]
+    },
+    "WorkspaceSettings": {
+      "title": "WorkspaceSettings",
+      "description": "Creator studio default preferences and brand voice settings.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "creatorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Creator display name."
+        },
+        "brandHandle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 60,
+          "description": "Creator social handle."
+        },
+        "niche": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 150,
+          "description": "Default creator niche."
+        },
+        "brandVoice": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 400,
+          "description": "Default customizable brand voice."
+        },
+        "defaultPlatform": {
+          "type": "string",
+          "enum": ["Instagram", "YouTube", "Facebook", "LinkedIn"],
+          "description": "Default target platform."
+        },
+        "defaultLanguage": {
+          "type": "string",
+          "enum": ["English", "Hindi", "Bengali", "Spanish", "French", "German", "Portuguese", "Japanese"],
+          "description": "Default content language."
+        },
+        "defaultTone": {
+          "type": "string",
+          "enum": ["Professional", "Funny", "Educational", "Inspirational", "Casual"],
+          "description": "Default content tone."
+        },
+        "defaultDuration": {
+          "type": "string",
+          "enum": ["15 sec", "30 sec", "60 sec"],
+          "description": "Default short video duration."
+        },
+        "exportFormat": {
+          "type": "string",
+          "enum": ["markdown", "txt", "json"],
+          "description": "Preferred download export format."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when settings were updated."
+        }
+      },
+      "required": [
+        "userId",
+        "creatorName",
+        "defaultPlatform",
+        "defaultLanguage",
+        "defaultTone",
+        "defaultDuration",
+        "exportFormat",
+        "updatedAt"
+      ]
+    },
+    "AssistantConversation": {
+      "title": "AssistantConversation",
+      "description": "Conversational session between creator and the Autonomous AI Creator Assistant.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Conversation document ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140,
+          "description": "Conversation title."
+        },
+        "projectId": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 128,
+          "description": "Optional selected project ID."
+        },
+        "projectTitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 140,
+          "description": "Optional selected project title."
+        },
+        "mediaName": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200,
+          "description": "Optional uploaded media filename."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when conversation started."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest conversation activity."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AssistantMessage": {
+      "title": "AssistantMessage",
+      "description": "Single message inside an AssistantConversation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Message document ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "conversationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Parent conversation ID."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "assistant", "system"],
+          "description": "Message sender role."
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000,
+          "description": "Message body."
+        },
+        "taskId": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 128,
+          "description": "Optional linked assistant task ID."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when message was recorded."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "conversationId",
+        "role",
+        "content",
+        "createdAt"
+      ]
+    },
+    "AssistantTask": {
+      "title": "AssistantTask",
+      "description": "Coordinated multi-step AI workflow job, outputs, edits, and approval state.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Task document ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "conversationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Parent conversation ID."
+        },
+        "jobId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Backend job identifier."
+        },
+        "instruction": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000,
+          "description": "Natural-language creator instruction."
+        },
+        "projectId": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 128,
+          "description": "Optional selected project ID."
+        },
+        "projectTitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 140,
+          "description": "Optional selected project title."
+        },
+        "mediaName": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200,
+          "description": "Optional uploaded media filename."
+        },
+        "language": {
+          "type": "string",
+          "enum": ["English", "Hindi", "Bengali", "Spanish", "French", "German", "Portuguese", "Japanese"],
+          "description": "Target generation language."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["queued", "running", "completed", "failed"],
+          "description": "Backend execution status."
+        },
+        "confirmedByBackend": {
+          "type": "boolean",
+          "description": "True only when backend verified all pipeline steps succeeded."
+        },
+        "approvalStatus": {
+          "type": "string",
+          "enum": ["pending_approval", "approved", "published"],
+          "description": "User review and approval gate status."
+        },
+        "approvedAt": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "ISO timestamp when user approved outputs."
+        },
+        "publishedAt": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "ISO timestamp when approved outputs were published to workspace."
+        },
+        "error": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Error message if backend job failed."
+        },
+        "steps": {
+          "type": "array",
+          "description": "Ordered pipeline step statuses."
+        },
+        "outputs": {
+          "type": "object",
+          "description": "Structured clip proposals, captions, hashtags, subtitles, and video processing jobs."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when task was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when task was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "conversationId",
+        "jobId",
+        "instruction",
+        "language",
+        "status",
+        "confirmedByBackend",
+        "approvalStatus",
+        "steps",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SocialConnection": {
+      "title": "SocialConnection",
+      "description": "Public, non-secret social media account connection metadata synced from backend OAuth vault (never stores access or refresh tokens).",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "enum": ["instagram", "youtube", "linkedin", "facebook"],
+          "description": "Platform connection document ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["instagram", "youtube", "linkedin", "facebook"],
+          "description": "Official social platform identifier."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["connected", "expired", "needs_reauth", "disconnected", "not_configured"],
+          "description": "Current OAuth connection state."
+        },
+        "accountName": {
+          "type": "string",
+          "maxLength": 140,
+          "description": "Connected page, channel, or profile display name."
+        },
+        "accountHandle": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Optional @handle or page category."
+        },
+        "externalAccountId": {
+          "type": "string",
+          "maxLength": 140,
+          "description": "Platform account, page, channel, or URN identifier."
+        },
+        "scopes": {
+          "type": "array",
+          "description": "Granted OAuth scopes (max 20)."
+        },
+        "tokenExpiresAt": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "ISO timestamp when backend OAuth access token expires."
+        },
+        "lastCheckedAt": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "ISO timestamp of last token verification."
+        },
+        "lastError": {
+          "type": "string",
+          "maxLength": 600,
+          "description": "Last recorded connection or token error."
+        },
+        "connectedAt": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "ISO timestamp when account was connected."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when metadata was updated."
+        }
+      },
+      "required": ["id", "userId", "platform", "status", "updatedAt"]
+    },
+    "SocialPost": {
+      "title": "SocialPost",
+      "description": "Scheduled or published social media post with approval workflow, status tracking, and real API analytics snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Social post document ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["instagram", "youtube", "linkedin", "facebook"],
+          "description": "Target social media platform."
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Post or video title."
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 6000,
+          "description": "Post commentary, caption, or video description."
+        },
+        "hashtags": {
+          "type": "array",
+          "description": "Normalized hashtags list (max 30)."
+        },
+        "mediaUrl": {
+          "type": "string",
+          "maxLength": 1500,
+          "description": "Public HTTPS image, video, or link URL required by platform API."
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["none", "image", "video", "link"],
+          "description": "Attached media asset type."
+        },
+        "youtubePrivacy": {
+          "type": "string",
+          "enum": ["private", "unlisted", "public"],
+          "description": "YouTube video privacy setting."
+        },
+        "projectId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Optional linked CreatorProject ID."
+        },
+        "approvalStatus": {
+          "type": "string",
+          "enum": ["pending_approval", "approved"],
+          "description": "User approval gate status required before scheduling or publishing."
+        },
+        "approvedAt": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "ISO timestamp when user approved the post."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "scheduled", "publishing", "published", "failed"],
+          "description": "Publishing lifecycle status."
+        },
+        "scheduledFor": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "ISO timestamp for scheduled publishing."
+        },
+        "publishedAt": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "ISO timestamp confirmed by official platform API on publish."
+        },
+        "externalPostId": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Published post/video/media ID returned by platform API."
+        },
+        "externalPostUrl": {
+          "type": "string",
+          "maxLength": 600,
+          "description": "Permalink to published post if returned by platform API."
+        },
+        "error": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Explicit error message if publishing or validation failed."
+        },
+        "errorCode": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Structured backend error code."
+        },
+        "analytics": {
+          "type": "object",
+          "description": "Real post performance metrics snapshot returned by platform APIs."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when post entry was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when post entry was updated."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "platform",
+        "caption",
+        "mediaType",
+        "approvalStatus",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BrandKit": {
+      "title": "BrandKit",
+      "description": "Creator brand identity, colors, typography, preferred CTAs, caption styles, and reusable templates.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "brandName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Creator brand name."
+        },
+        "brandHandle": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Creator social handle."
+        },
+        "tagline": {
+          "type": "string",
+          "maxLength": 240,
+          "description": "Brand positioning tagline."
+        },
+        "logoUrl": {
+          "type": "string",
+          "maxLength": 1500,
+          "description": "Firebase Storage HTTPS download URL for uploaded brand logo."
+        },
+        "logoStoragePath": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Firebase Storage path of uploaded brand logo."
+        },
+        "colors": {
+          "type": "object",
+          "description": "Brand color hex palette (primary, secondary, accent, background, text)."
+        },
+        "typography": {
+          "type": "object",
+          "description": "Heading and body font selections."
+        },
+        "brandVoice": {
+          "type": "string",
+          "maxLength": 600,
+          "description": "Detailed brand voice rules."
+        },
+        "preferredCtas": {
+          "type": "array",
+          "description": "Preferred calls to action (max 12)."
+        },
+        "captionStyle": {
+          "type": "object",
+          "description": "Caption formatting and emoji preferences."
+        },
+        "templates": {
+          "type": "array",
+          "description": "Saved reusable brand templates (max 15)."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when Brand Kit was last updated."
+        }
+      },
+      "required": [
+        "userId",
+        "brandName",
+        "colors",
+        "typography",
+        "brandVoice",
+        "preferredCtas",
+        "captionStyle",
+        "templates",
+        "updatedAt"
+      ]
+    },
+    "VideoJob": {
+      "title": "VideoJob",
+      "description": "FFmpeg video processing render job metadata and Firebase Storage links.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Video job document ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "sourceFileName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240,
+          "description": "Original uploaded video filename."
+        },
+        "sourceDurationSec": {
+          "type": "number",
+          "description": "Probed source duration in seconds."
+        },
+        "sourceWidth": {
+          "type": "number",
+          "description": "Source pixel width."
+        },
+        "sourceHeight": {
+          "type": "number",
+          "description": "Source pixel height."
+        },
+        "clipTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "description": "Clip title."
+        },
+        "startSec": {
+          "type": "number",
+          "description": "Clip start timestamp in seconds."
+        },
+        "endSec": {
+          "type": "number",
+          "description": "Clip end timestamp in seconds."
+        },
+        "aspectRatio": {
+          "type": "string",
+          "enum": ["9:16", "1:1", "16:9"],
+          "description": "Target export aspect ratio."
+        },
+        "language": {
+          "type": "string",
+          "enum": ["English", "Hindi", "Bengali", "Spanish", "French", "German", "Portuguese", "Japanese"],
+          "description": "Subtitle language."
+        },
+        "subtitleStyle": {
+          "type": "object",
+          "description": "Subtitle font, colors, and placement settings."
+        },
+        "subtitlesCount": {
+          "type": "number",
+          "description": "Number of subtitle cues burned into video."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["queued", "processing", "completed", "failed"],
+          "description": "FFmpeg worker execution status."
+        },
+        "progress": {
+          "type": "number",
+          "description": "Encoding progress percentage (0-100)."
+        },
+        "stageMessage": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "Human-readable processing stage."
+        },
+        "outputFileName": {
+          "type": "string",
+          "maxLength": 240,
+          "description": "Rendered MP4 filename."
+        },
+        "downloadUrl": {
+          "type": "string",
+          "maxLength": 1500,
+          "description": "Backend MP4 stream/download URL."
+        },
+        "storageUrl": {
+          "type": "string",
+          "maxLength": 1500,
+          "description": "Firebase Storage HTTPS URL once uploaded."
+        },
+        "storagePath": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Firebase Storage object path."
+        },
+        "outputBytes": {
+          "type": "number",
+          "description": "Rendered MP4 size in bytes."
+        },
+        "error": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "FFmpeg worker error details if failed."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when job was queued."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when job was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "sourceFileName",
+        "sourceDurationSec",
+        "sourceWidth",
+        "sourceHeight",
+        "clipTitle",
+        "startSec",
+        "endSec",
+        "aspectRatio",
+        "language",
+        "subtitleStyle",
+        "subtitlesCount",
+        "status",
+        "progress",
+        "stageMessage",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ThumbnailAsset": {
+      "title": "ThumbnailAsset",
+      "description": "AI-directed and canvas-rendered thumbnail graphic stored in Firebase Storage with metadata in Firestore.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Thumbnail document ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "description": "Thumbnail concept title."
+        },
+        "headline": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Main thumbnail headline text."
+        },
+        "kicker": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Short eyebrow kicker text."
+        },
+        "statCallout": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Optional badge or metric callout."
+        },
+        "aspectRatio": {
+          "type": "string",
+          "enum": ["16:9", "9:16", "1:1"],
+          "description": "Export aspect ratio."
+        },
+        "stylePreset": {
+          "type": "string",
+          "enum": ["bold-creator", "editorial-minimal", "tech-dark", "split-comparison", "stat-spotlight"],
+          "description": "Visual style preset."
+        },
+        "layout": {
+          "type": "string",
+          "enum": ["split-left", "center-spotlight", "bottom-editorial", "stat-grid"],
+          "description": "Canvas layout arrangement."
+        },
+        "palette": {
+          "type": "object",
+          "description": "Color palette used for rendering."
+        },
+        "storageUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500,
+          "description": "Firebase Storage HTTPS download URL for rendered PNG."
+        },
+        "storagePath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "description": "Firebase Storage object path."
+        },
+        "projectId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Optional linked CreatorProject ID."
+        },
+        "ctrRationale": {
+          "type": "string",
+          "maxLength": 600,
+          "description": "AI art direction CTR rationale."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when thumbnail was saved."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when thumbnail was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "headline",
+        "kicker",
+        "aspectRatio",
+        "stylePreset",
+        "layout",
+        "palette",
+        "storageUrl",
+        "storagePath",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AiVideoJob": {
+      "title": "AiVideoJob",
+      "description": "Automatic AI Script-to-Video generation job metadata, progress, and rendered MP4 storage references.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "AI video job document ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "visualEngine": {
+          "type": "string",
+          "enum": ["ai-omni", "free-motion"],
+          "description": "Video visual generation engine (paid Gemini Omni Flash AI clips or free local FFmpeg motion graphics)."
+        },
+        "freeVisualStyle": {
+          "type": "string",
+          "enum": ["topic-pictures", "animated-motion"],
+          "description": "Free visual mode preference: topic-matched photos/illustrations with Ken Burns motion or pure procedural animated graphics."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "description": "Video project title."
+        },
+        "originalScript": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16000,
+          "description": "Original creator narration script (preserved verbatim)."
+        },
+        "style": {
+          "type": "string",
+          "enum": ["cinematic", "documentary", "modern-tech", "minimalist", "energetic-social", "storytelling"],
+          "description": "Selected visual video style."
+        },
+        "durationSec": {
+          "type": "number",
+          "description": "Target total video duration in seconds (15, 30, 60, or 90)."
+        },
+        "aspectRatio": {
+          "type": "string",
+          "enum": ["9:16", "16:9", "1:1"],
+          "description": "Output video aspect ratio."
+        },
+        "language": {
+          "type": "string",
+          "enum": ["English", "Hindi", "Bengali", "Spanish", "French", "German", "Portuguese", "Japanese"],
+          "description": "Narration and subtitle language."
+        },
+        "voice": {
+          "type": "string",
+          "enum": ["none", "Kore", "Puck", "Charon", "Fenrir", "Zephyr"],
+          "description": "Selected AI voiceover voice or offline none mode."
+        },
+        "narrationVolume": {
+          "type": "number",
+          "description": "Narration voiceover volume multiplier (0.0 to 1.5)."
+        },
+        "musicPreset": {
+          "type": "string",
+          "enum": ["none", "ambient-uplift", "tech-pulse", "cinematic-score", "lofi-chill", "ai-lyria"],
+          "description": "Selected background music preset or AI score."
+        },
+        "musicVolume": {
+          "type": "number",
+          "description": "Background music volume ratio (0.0 to 1.0)."
+        },
+        "enableSubtitles": {
+          "type": "boolean",
+          "description": "Whether synchronized subtitles are burned into the MP4."
+        },
+        "subtitleStyle": {
+          "type": "object",
+          "description": "Subtitle font, colors, and placement settings."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["queued", "processing", "completed", "failed", "cancelled"],
+          "description": "Overall AI video pipeline execution status."
+        },
+        "currentStage": {
+          "type": "string",
+          "enum": ["analyzing_script", "creating_scene_plan", "generating_clips", "generating_voiceover", "creating_subtitles", "combining_media", "exporting_mp4"],
+          "description": "Current 7-stage pipeline step."
+        },
+        "stageMessage": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "Human-readable stage message."
+        },
+        "progress": {
+          "type": "number",
+          "description": "Overall completion percentage (0-100)."
+        },
+        "scenesCount": {
+          "type": "number",
+          "description": "Total number of planned scenes."
+        },
+        "completedScenes": {
+          "type": "number",
+          "description": "Number of completed AI video clips."
+        },
+        "sceneStates": {
+          "type": "array",
+          "description": "Per-scene clip generation status snapshots."
+        },
+        "subtitlesCount": {
+          "type": "number",
+          "description": "Count of synchronized subtitle cues."
+        },
+        "estimatedCostUsd": {
+          "type": "number",
+          "description": "Estimated generation cost in USD confirmed by user."
+        },
+        "outputFileName": {
+          "type": "string",
+          "maxLength": 240,
+          "description": "Final rendered MP4 filename."
+        },
+        "outputWidth": {
+          "type": "number",
+          "description": "Final output video width in pixels."
+        },
+        "outputHeight": {
+          "type": "number",
+          "description": "Final output video height in pixels."
+        },
+        "actualDurationSec": {
+          "type": "number",
+          "description": "Final rendered MP4 duration in seconds."
+        },
+        "outputBytes": {
+          "type": "number",
+          "description": "Final rendered MP4 file size in bytes."
+        },
+        "downloadUrl": {
+          "type": "string",
+          "maxLength": 1500,
+          "description": "Backend MP4 download endpoint."
+        },
+        "srtDownloadUrl": {
+          "type": "string",
+          "maxLength": 1500,
+          "description": "Backend SRT subtitles download endpoint."
+        },
+        "storageUrl": {
+          "type": "string",
+          "maxLength": 1500,
+          "description": "Firebase Storage HTTPS URL once persisted."
+        },
+        "storagePath": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Firebase Storage object path."
+        },
+        "error": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Explicit error message if generation failed."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when AI video job was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when AI video job was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "originalScript",
+        "style",
+        "durationSec",
+        "aspectRatio",
+        "language",
+        "voice",
+        "musicPreset",
+        "musicVolume",
+        "enableSubtitles",
+        "subtitleStyle",
+        "status",
+        "currentStage",
+        "stageMessage",
+        "progress",
+        "scenesCount",
+        "completedScenes",
+        "sceneStates",
+        "subtitlesCount",
+        "estimatedCostUsd",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Private user profile document keyed by Firebase Auth UID."
+    },
+    "/users/{userId}/projects/{projectId}": {
+      "schema": {
+        "$ref": "#/entities/CreatorProject"
+      },
+      "description": "Authenticated user's saved multi-platform content projects."
+    },
+    "/users/{userId}/generations/{generationId}": {
+      "schema": {
+        "$ref": "#/entities/ContentGeneration"
+      },
+      "description": "Authenticated user's AI content generation history."
+    },
+    "/users/{userId}/settings/{settingId}": {
+      "schema": {
+        "$ref": "#/entities/WorkspaceSettings"
+      },
+      "description": "Authenticated user's workspace preferences and brand voice."
+    },
+    "/users/{userId}/assistantConversations/{conversationId}": {
+      "schema": {
+        "$ref": "#/entities/AssistantConversation"
+      },
+      "description": "Authenticated user's AI assistant conversation threads."
+    },
+    "/users/{userId}/assistantConversations/{conversationId}/messages/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/AssistantMessage"
+      },
+      "description": "Messages belonging to an AI assistant conversation."
+    },
+    "/users/{userId}/assistantTasks/{taskId}": {
+      "schema": {
+        "$ref": "#/entities/AssistantTask"
+      },
+      "description": "Authenticated user's autonomous AI assistant task history, outputs, and approvals."
+    },
+    "/users/{userId}/socialConnections/{platform}": {
+      "schema": {
+        "$ref": "#/entities/SocialConnection"
+      },
+      "description": "Authenticated user's non-secret social media account connection metadata."
+    },
+    "/users/{userId}/socialPosts/{postId}": {
+      "schema": {
+        "$ref": "#/entities/SocialPost"
+      },
+      "description": "Authenticated user's social media post drafts, approvals, schedules, publish status, and analytics."
+    },
+    "/users/{userId}/brandKit/{brandKitId}": {
+      "schema": {
+        "$ref": "#/entities/BrandKit"
+      },
+      "description": "Authenticated user's Brand Kit configuration (colors, typography, logo, voice, CTAs, templates)."
+    },
+    "/users/{userId}/videoJobs/{jobId}": {
+      "schema": {
+        "$ref": "#/entities/VideoJob"
+      },
+      "description": "Authenticated user's FFmpeg smart video editor jobs and rendered MP4 storage references."
+    },
+    "/users/{userId}/thumbnails/{thumbnailId}": {
+      "schema": {
+        "$ref": "#/entities/ThumbnailAsset"
+      },
+      "description": "Authenticated user's saved AI Thumbnail Studio designs and Firebase Storage image links."
+    },
+    "/users/{userId}/aiVideoJobs/{jobId}": {
+      "schema": {
+        "$ref": "#/entities/AiVideoJob"
+      },
+      "description": "Authenticated user's automatic AI Script-to-Video generation jobs, progress, and rendered MP4 links."
+    }
+  }
+}

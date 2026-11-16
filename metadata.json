@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix Remix Remix Remix CreatorPilot AI – Autonomous Creator Assistant",
+  "description": "Convert one piece of content into Instagram Reels, YouTube Shorts, captions, trending hashtags, and platform-specific social media posts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
