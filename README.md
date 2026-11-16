@@ -1,24 +1,39 @@
-<<<<<<< HEAD
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# 🚀 CreatorPilot
 
-# Run and deploy CreatorPilot AI
+**Create Smarter. Manage Better. Grow Faster.**
 
-This contains everything you need to run your app locally.
+CreatorPilot is an AI-powered content creation and social media management platform that helps creators and businesses simplify their digital content workflow.
 
-Project: CreatorPilot AI
+## ✨ Features
 
-## Run Locally
+- ✍️ AI-powered content and caption generation
+- 🎬 AI video generation and editing
+- 🖼️ Thumbnail creation
+- 📅 Social media content scheduling
+- 📊 Content performance analytics
+- 🎨 Brand kit and customization
+- 🤖 AI-powered creative assistant
+- 🔐 Secure user authentication
 
-**Prerequisites:**  Node.js
+## 🛠️ Tech Stack
 
+- **Frontend:** React, TypeScript, Tailwind CSS
+- **Backend:** Node.js, Express
+- **AI:** Google Gemini API
+- **Authentication:** Firebase
+- **Database:** Cloud Firestore
+- **Build Tool:** Vite
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
-=======
+## 🔒 Security
+
+Keep API keys and credentials private. Never upload your `.env` file to GitHub.
+
+## 🎯 Vision
+
+To make content creation easier, faster, and more accessible by bringing essential creator tools together in one platform.
+
+---
+
+**CreatorPilot – Your Creative Journey, On Autopilot!**
 # CreatorPilot
 >>>>>>> cd255c137a7f7c4b7128f217647a4efc1be555dd
